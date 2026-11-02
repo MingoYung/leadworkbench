@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#10131C">
+  <link rel="icon" type="image/png" href="/app-icon.png">
+  <title>获客平台</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <aside class="sidebar" aria-label="批次导航">
+      <a class="brand" href="#" id="brand-home" aria-label="获客平台首页"><img src="/app-icon.png" alt=""><span>获客平台<small>线索与证据工作台</small></span></a>
+      <button class="button sidebar-create" id="new-run"><span aria-hidden="true">＋</span> 新建任务</button>
+      <div class="nav-heading"><span>我的任务</span><button class="icon-button" id="refresh-runs" aria-label="刷新批次" title="刷新批次"></button></div>
+      <div id="runs-list" class="runs-list" aria-live="polite"><div class="nav-empty">正在读取批次…</div></div>
+      <div class="sidebar-bottom"><span class="local-dot"></span><span>仅保存在本机</span><span id="app-version"></span></div>
+    </aside>
+    <main class="main-shell">
+      <header class="appbar">
+        <button class="icon-button mobile-menu" id="toggle-nav" aria-label="打开批次导航"></button>
+        <div class="appbar-title">工作台</div>
+        <div class="appbar-actions"><span id="model-indicator" class="model-indicator"><i></i>模型尚未测试</span><button class="text-button" id="open-guide">帮助</button><button class="text-button" id="open-settings">设置</button></div>
+      </header>
+      <div id="global-error" class="global-error" role="alert" hidden></div>
+      <section id="workspace" class="workspace" aria-label="批次工作区"><div class="initial-loading"><span class="spinner"></span><p>正在连接本地工作台…</p></div></section>
+    </main>
+  </div>
+  <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
+
+  <dialog id="new-dialog" class="dialog new-dialog" aria-labelledby="new-title">
+    <div class="dialog-header"><div><h2 id="new-title">新建任务</h2><p id="wizard-subtitle">先确定目标，再选择来源。</p></div><button class="icon-button close-dialog" type="button" aria-label="关闭"></button></div>
+    <form id="new-form" novalidate>
+      <ol class="wizard-steps" aria-label="创建进度"><li><button type="button" data-wizard-step="0"><span>1</span>找谁</button></li><li><button type="button" data-wizard-step="1"><span>2</span>从哪找</button></li><li><button type="button" data-wizard-step="2"><span>3</span>处理方式</button></li></ol>
+      <div class="dialog-body wizard-body" id="wizard-body">
+        <section data-wizard-panel="0" aria-labelledby="wizard-target-title">
+          <div class="step-heading"><h3 id="wizard-target-title">你想找到谁？</h3><p>填写目标，其余条件可以稍后补充。</p></div>
+          <label class="field">任务名称<input name="name" required maxlength="100" placeholder="例如：杭州近期装修需求" autocomplete="off"></label>
+          <fieldset class="market-fieldset" id="market-fieldset"><legend class="sr-only">获客范围</legend><div class="market-switch" id="market-switch"><label><input type="radio" name="market" value="cn" checked><span>国内获客</span></label><label><input type="radio" name="market" value="global"><span>海外商机</span></label></div></fieldset>
+          <section class="targeting-builder" id="targeting-builder" aria-label="定向条件">
+            <div class="form-row"><label class="field">行业 / 服务<input name="industry" maxlength="100" list="industry-examples" placeholder="填写行业或服务"><datalist id="industry-examples"><option value="家装"><option value="家政"><option value="门店装修"><option value="定制家具"><option value="包装采购"></datalist></label><label class="field">目标顾客<select name="customer_type"><option value="consumer">个人消费者 / 业主</option><option value="business">商家 / 企业采购</option><option value="any">不限，按证据判断</option></select></label></div>
+            <div class="preset-row"><button type="button" class="text-button" id="home-preset">填入家装业主示例</button></div>
+            <label class="field">目标地区<input name="regions" maxlength="500" placeholder="例如：杭州，宁波；多个地区用逗号分隔"></label>
+            <label class="field">需求标签<input name="include_tags" maxlength="1000" placeholder="例如：准备装修，旧房改造，找施工队"></label>
+            <div id="target-tag-preview" class="target-tag-preview" aria-live="polite"></div>
+            <details class="advanced-section"><summary>更多筛选条件</summary><div>
+              <label class="field">排除类型与信号<input name="exclude_tags" maxlength="1000" placeholder="例如：同行广告，招商，招聘"><small>按身份与语境核查，不直接排除“求推荐装修公司”的业主。</small></label>
+              <label class="field">具体需求 / 其他要求<textarea name="needs" rows="2" maxlength="3000" placeholder="描述你希望看到的需求信号。"></textarea></label>
+              <div class="custom-fields-heading"><span>补充条件</span><button type="button" class="text-button" id="add-custom-field">＋ 添加条件</button></div><div id="target-custom-fields" class="target-custom-fields"></div>
+              <p class="field-note">地区、预算和计划仍需来源原文证明。</p>
+            </div></details>
+          </section>
+          <details class="advanced-section"><summary>补充本轮目标</summary><label class="field"><textarea name="goal" rows="2" placeholder="本轮需要确认的问题或其他说明。"></textarea></label></details>
+        </section>
+        <section data-wizard-panel="1" aria-labelledby="wizard-source-title" hidden>
+          <div class="step-heading"><h3 id="wizard-source-title">从哪里收集线索？</h3><p>选择一个来源，原文与链接会一起保存。</p></div>
+          <fieldset class="source-fieldset"><legend class="sr-only">线索来源</legend><div class="source-switch" id="source-switch">
+            <label><input type="radio" name="source" value="opencli" checked><span>平台搜索</span></label><label><input type="radio" name="source" value="comments"><span>指定帖子评论</span></label><label><input type="radio" name="source" value="urls"><span>网页链接</span></label><label><input type="radio" name="source" value="import"><span>导入记录</span></label><label><input type="radio" name="source" value="demo"><span>演示体验</span></label>
+          </div></fieldset>
+          <div class="source-panel" data-source="demo" hidden><div class="notice demo-notice"><strong>体验完整审核流程</strong><p>使用合成示例，不调用模型，不代表实际客户。</p></div></div>
+          <div class="source-panel" data-source="import" hidden><label class="field">选择 JSON / CSV 文件<input type="file" id="records-file" accept=".json,.jsonl,.csv,.tsv,application/json,text/csv"></label><label class="field">或粘贴记录<textarea name="records" id="records-input" rows="5" spellcheck="false" placeholder='[{"source_url":"https://…","content":"需求原文"}]'></textarea><small>支持 JSON、JSONL、CSV 和 TSV，至少包含来源网址与原文。</small></label><button class="button secondary small" type="button" id="validate-records">检查内容</button><div id="import-validation" class="form-message" aria-live="polite"></div></div>
+          <div class="source-panel" data-source="urls comments" hidden><label class="field"><span id="source-url-label">网页链接</span><textarea name="urls" rows="5" placeholder="每行一个帖子或网页链接"></textarea><small id="source-url-help"></small></label></div>
+          <div class="source-panel" data-source="opencli">
+            <fieldset class="platform-fieldset"><legend>搜索平台</legend><div id="search-platforms" class="search-platforms"></div></fieldset>
+            <div class="query-plan-heading"><label for="search-queries">搜索词</label><button class="text-button" type="button" id="preview-search">根据条件生成</button></div><textarea name="queries" id="search-queries" rows="3" placeholder="每行一组搜索词；也可根据第一步的条件生成。"></textarea>
+            <div id="search-plan-preview" class="search-plan-preview" hidden aria-live="polite"></div>
+            <details class="advanced-section platform-help"><summary>平台连接与能力说明</summary><p class="field-note">搜索需要 OpenCLI 浏览器连接和相应登录状态。已接入适配器不等于账号已连接。</p><div id="manual-platform-links" class="manual-platform-links"></div></details>
+          </div>
+          <section id="collection-options" class="collection-options" aria-label="采集与评论筛选" hidden>
+            <fieldset class="collection-scope" id="collection-scope"><legend>采集范围</legend><div class="collection-switch"><label><input type="radio" name="collection_scope" value="posts" checked><span>帖子 / 视频</span></label><label><input type="radio" name="collection_scope" value="comments"><span>评论</span></label><label><input type="radio" name="collection_scope" value="posts_and_comments"><span>帖子和评论</span></label></div></fieldset>
+            <div id="comment-options" hidden><p class="field-note">先定位帖子，再匹配评论；这是指定帖子的采样，不是全站评论索引。</p><label class="field">评论关键词<textarea name="comment_keywords" rows="2" maxlength="1200" placeholder="例如：求推荐，报价，想了解；留空保留读取到的评论"></textarea></label><div class="form-row"><label class="field">关键词匹配<select name="comment_match_mode"><option value="any">命中任意关键词</option><option value="all">包含全部关键词</option></select></label><label class="field">最多读取帖子数<input name="max_posts" type="number" min="1" max="20" value="3" required></label></div><details class="advanced-section"><summary>评论数量与回复</summary><label class="field">每帖最多评论数<input name="max_comments_per_post" type="number" min="1" max="100" value="20" required></label><label class="check-field"><input name="include_replies" type="checkbox">尝试包含回复</label><p id="comment-capability-hint" class="field-note"></p></details></div>
+          </section>
+        </section>
+        <section data-wizard-panel="2" aria-labelledby="wizard-processing-title" hidden>
+          <div class="step-heading"><h3 id="wizard-processing-title">如何处理收集的内容？</h3><p>可以先收集，再逐条审核。</p></div>
+          <fieldset id="analysis-mode-fieldset" class="analysis-mode-fieldset"><legend class="sr-only">处理方式</legend><label class="analysis-choice"><input type="radio" name="analysis_mode" value="collect_only" checked><span><strong>只采集，稍后审核</strong><small>保存原文，交给你或 Codex 判断。不需要启动本地模型。</small></span></label><label class="analysis-choice"><input type="radio" name="analysis_mode" value="local"><span><strong>用本地模型初筛</strong><small>连接设置中的模型服务，保留判断与引用依据。</small></span></label><p id="analysis-mode-hint" class="field-note"></p></fieldset>
+          <div id="wizard-summary" class="wizard-summary"></div>
+          <div class="form-row final-options"><label class="field compact">本轮最多条数<input name="limit" type="number" min="1" max="50" value="20" required></label><label class="check-field"><input name="start_now" type="checkbox" checked>创建后立即运行</label></div>
+        </section>
+        <div id="new-error" class="form-message error" role="alert"></div>
+      </div>
+      <div class="dialog-footer wizard-footer"><button class="text-button close-dialog" type="button">取消</button><div><button class="button secondary" type="button" id="wizard-back" hidden>上一步</button><button class="button primary" type="button" id="wizard-next">下一步</button><button class="button primary" id="create-submit" type="submit" hidden>创建并运行</button></div></div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog" class="dialog settings-dialog" aria-labelledby="settings-title">
+    <div class="dialog-header"><div><h2 id="settings-title">设置</h2><p>连接现有模型与采集器。只采集无需启动模型。</p></div><button class="icon-button close-dialog" type="button" aria-label="关闭"></button></div>
+    <form id="settings-form" novalidate><div class="dialog-body">
+      <div class="section-caption">本地推理（可选）</div><label class="check-field setting-toggle"><input name="enabled" type="checkbox">新批次默认选择本地模型初筛</label><p class="muted model-optional-note">每个批次都能单独选择只采集或本地初筛。程序不会启动、关闭或修改你的模型控制器。</p>
+      <label class="field">模型名称 / alias<input name="model" required spellcheck="false" value="local-model"></label>
+      <label class="field">服务地址<input name="base_url" type="url" required spellcheck="false" value="http://127.0.0.1:8080/v1"><small>OpenAI 兼容接口通常带 /v1；Ollama 原生接口通常为 http://127.0.0.1:11434。</small></label>
+      <div class="controller-preset-row"><button class="button secondary small" type="button" id="use-controller">本地服务示例（8080）</button><small class="muted">只填入地址和模型名；端口可继续编辑，保存后才生效。</small></div>
+      <details class="advanced-section"><summary>协议、密钥与推理参数</summary><div><label class="field">协议<select name="protocol"><option value="openai">OpenAI 兼容接口</option><option value="ollama">Ollama 原生接口</option></select></label>      <label class="field">API 密钥（服务需要时填写）<input name="api_key" type="password" autocomplete="new-password" placeholder="留空保留已保存的密钥"><span class="check-field"><input name="clear_key" type="checkbox">清除已保存的密钥</span></label>
+      <div class="form-row three"><label class="field">超时（秒）<input name="timeout_seconds" type="number" min="5" max="600" value="180" required></label><label class="field">最大输出 tokens<input name="max_tokens" type="number" min="128" max="16384" value="2048" required></label><label class="field">Temperature<input name="temperature" type="number" min="0" max="1" step="0.1" value="0.1" required></label></div>
+</div></details>
+      <div class="test-row"><button class="button secondary" type="button" id="test-model">测试连接</button><span class="muted">使用当前表单配置，不会自动保存。</span></div><div id="model-test-result" class="test-result" aria-live="polite" hidden></div>
+      <details class="advanced-section"><summary>采集器连接设置</summary><div>      <label class="field">可执行程序<input name="executable" value="opencli" spellcheck="false"></label><label class="field">Node 入口脚本（可选）<input name="node_entry" spellcheck="false" placeholder="使用 node.exe 时，填写 OpenCLI 的 .js 入口路径"><small>Windows 的 npm 启动器可改用 node.exe 加入口脚本；程序不执行 .cmd、.bat 或 .ps1。</small></label><div class="form-row"><label class="field">Profile（可选）<input name="profile" spellcheck="false"></label><label class="field">采集超时（秒）<input name="opencli_timeout" type="number" min="5" max="600" value="90" required></label></div>
+</div></details>
+      <div id="settings-error" class="form-message error" role="alert"></div>
+    </div><div class="dialog-footer"><button class="button secondary close-dialog" type="button">取消</button><button class="button primary" id="settings-submit" type="submit">保存设置</button></div></form>
+  </dialog>
+
+  <dialog id="history-dialog" class="dialog history-dialog" aria-labelledby="history-title"><div class="dialog-header"><div><h2 id="history-title">审核历史</h2><p>每次修改都保留原因，可在版本未冲突时撤销整批。</p></div><button class="icon-button close-dialog" type="button" aria-label="关闭"></button></div><div id="history-content" class="dialog-body"></div></dialog>
+
+  <dialog id="review-import-dialog" class="dialog" aria-labelledby="review-import-title"><div class="dialog-header"><div><h2 id="review-import-title">导入 Codex 审核</h2><p>只修改审核层，来源证据保持原样。</p></div><button class="icon-button close-dialog" type="button" aria-label="关闭"></button></div><form id="review-import-form"><div class="dialog-body"><label class="field">选择审核 JSON<input id="review-file" type="file" accept=".json,application/json"></label><label class="field">审核变更<textarea id="review-json" rows="12" spellcheck="false" placeholder='{"run_id":"…","operation_id":"…","changes":[{"candidate_id":"…","base_version":1,"decision":"keep","reason":"…","evidence_ids":[],"tags":[]}]}' required></textarea></label><div class="notice"><p>提交会检查候选版本。若你已修改同一条记录，导入会提示冲突，避免覆盖。</p></div><div id="review-import-error" class="form-message error" role="alert"></div></div><div class="dialog-footer"><button class="button secondary close-dialog" type="button">取消</button><button class="button primary" type="submit" id="review-import-submit">应用审核变更</button></div></form></dialog>
+
+  <dialog id="batch-review-dialog" class="dialog" aria-labelledby="batch-review-title"><div class="dialog-header"><div><h2 id="batch-review-title">批量人工审核</h2><p id="batch-review-description"></p></div><button class="icon-button close-dialog" type="button" aria-label="关闭"></button></div><form id="batch-review-form"><div class="dialog-body"><label class="field">审核理由<textarea id="batch-review-reason" rows="3" placeholder="记录本次筛选依据，便于复核和撤销。"></textarea></label><div id="batch-review-error" class="form-message error" role="alert"></div></div><div class="dialog-footer"><button class="button secondary close-dialog" type="button">取消</button><button class="button primary" type="submit" id="batch-review-submit">应用审核</button></div></form></dialog>
+
+  <dialog id="guide-dialog" class="dialog guide-dialog" aria-labelledby="guide-title"><div class="dialog-header"><div><h2 id="guide-title">与 Codex / harness 交接</h2><p>工作台保存任务与证据，外部工具提交可追溯的审核意见。</p></div><button class="icon-button close-dialog" type="button" aria-label="关闭"></button></div><div class="dialog-body guide-body">
+    <ol class="handoff-steps"><li><strong>完成一轮采集</strong><p>演示数据与真实批次分别标注。批次完成后导出 JSON，包含证据快照及审核格式。</p></li><li><strong>交给 Codex 筛选</strong><p>让它核对原文、身份、重复项与未知信息；输出带 candidate_id、base_version 和理由的审核变更。</p></li><li><strong>导入后人工复核</strong><p>使用“导入审核”，查看三层判断和修改历史。保留、排除、补查均可在 UI 中调整。</p></li></ol>
+    <div class="section-caption divided">本地 HTTP 接口</div><p>只在本机提供服务。读取 <code>GET /api/bootstrap</code> 获取 token，写入时使用 <code>X-App-Token</code>；CLI 和 MCP 也通过 HTTP 读写，不直接改数据库。</p><div class="endpoint-list"><div><code>GET /api/runs</code><span>批次列表</span></div><div><code>GET /api/candidates?run_id=…</code><span>候选与版本</span></div><div><code>GET /api/candidates/{id}</code><span>完整证据与判断</span></div><div><code>POST /api/reviews</code><span>幂等、版本检查、原子审核</span></div><div><code>POST /api/reviews/{id}/revert</code><span>撤销审核变更</span></div></div>
+    <p class="muted">MCP 工具包括 runs_list、candidates_list、evidence_get、reviews_submit、reviews_revert、runs_start、runs_pause。启动与命令行说明见随程序 README。</p><div class="section-caption divided">审核格式示例</div><pre id="review-example"></pre><button class="button secondary small" id="copy-review-example">复制格式示例</button>
+  </div></dialog>
+</body>
+</html>

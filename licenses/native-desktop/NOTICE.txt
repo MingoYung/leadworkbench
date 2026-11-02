@@ -1,0 +1,45 @@
+获客平台 — Native desktop third-party notices
+
+Components used by the native desktop
+
+PySide6-Essentials 6.12.0 and shiboken6 6.12.0, from the Qt for Python project.
+The package METADATA files and package-supplied license files are preserved in
+this directory. The METADATA license expression is:
+LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only.
+
+This directory also includes the unmodified LGPL version 3 and GPL version 3
+license texts from Qt's official Qt for Python source mirror at tag 6.12.0.
+LGPL version 3 incorporates GPL version 3, so both texts are supplied together.
+The package-supplied LicenseRef-Qt-Commercial.txt files are retained as received;
+their inclusion is not a grant of a commercial Qt license by this application.
+
+The native application uses PySide6 QtWidgets, QtCore and QtGui, with QtNetwork
+for same-user desktop activation. Windows packaging uses the shared Qt DLLs
+and Python extension modules in the complete onedir distribution, rather than
+a statically linked Qt build. QtWebEngine and WebView are not used by this GUI.
+No Qt or Qt for Python source modifications were made for this application.
+Keep these notices and the original package notices with redistributed copies.
+
+Official package and source locations
+
+PySide6-Essentials 6.12.0:
+https://pypi.org/project/PySide6-Essentials/6.12.0/
+shiboken6 6.12.0:
+https://pypi.org/project/shiboken6/6.12.0/
+Qt for Python source, tag 6.12.0:
+https://code.qt.io/cgit/pyside/pyside-setup.git/tree/?h=6.12.0
+https://github.com/qtproject/pyside-pyside-setup/tree/6.12.0
+Qt framework source:
+https://code.qt.io/cgit/qt/qtbase.git/
+https://github.com/qt/qtbase
+
+Exact license-text sources
+
+LGPL-3.0-only.txt:
+https://github.com/qtproject/pyside-pyside-setup/blob/6.12.0/LICENSES/LGPL-3.0-only.txt
+GPL-3.0-only.txt:
+https://github.com/qtproject/pyside-pyside-setup/blob/6.12.0/LICENSES/GPL-3.0-only.txt
+
+This notice identifies bundled components and their upstream terms. It does not
+replace the original licenses or assert that every possible redistribution,
+modification or commercial deployment automatically satisfies those terms.

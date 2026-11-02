@@ -1,0 +1,32 @@
+{
+  "components": [
+    {
+      "name": "PySide6-Essentials",
+      "version": "6.12.0"
+    },
+    {
+      "name": "shiboken6",
+      "version": "6.12.0"
+    }
+  ],
+  "source_repository": "https://github.com/qtproject/pyside-pyside-setup",
+  "source_ref": "6.12.0",
+  "license_files": [
+    {
+      "file": "LGPL-3.0-only.txt",
+      "bytes": 7651,
+      "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+      "source_url": "https://github.com/qtproject/pyside-pyside-setup/blob/6.12.0/LICENSES/LGPL-3.0-only.txt",
+      "verification": "Full UTF-8 text equals the official GitHub connector response; headers and complete license endings verified."
+    },
+    {
+      "file": "GPL-3.0-only.txt",
+      "bytes": 35147,
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "source_url": "https://github.com/qtproject/pyside-pyside-setup/blob/6.12.0/LICENSES/GPL-3.0-only.txt",
+      "verification": "Full UTF-8 text equals the official GitHub connector response; headers and complete license endings verified."
+    }
+  ],
+  "package_metadata": "Original installed wheel METADATA and package-supplied license notices retained in this directory.",
+  "scope": "Third-party component provenance; not a commercial compliance guarantee."
+}

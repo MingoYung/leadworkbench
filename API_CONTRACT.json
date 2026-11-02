@@ -1,0 +1,250 @@
+{
+  "app": "获客平台",
+  "version": "0.5.3",
+  "stack": "Python3.12 standard library HTTP+SQLite business backend with a PySide6-Essentials 6.12.0 QtWidgets native desktop GUI. Normal startup opens native widgets, with no default browser launch and no WebView/QtWebEngine dependency. Windows distributions bundle the desktop runtime. The localhost HTTP/CLI/MCP contract remains available internally; closing the GUI leaves the service running for tools. desktop --service-only and compatible --no-browser start only the local API. Legacy static HTML/CSS/JavaScript remains an internal compatibility surface. Repository root contains source, docs, tests and build scripts. Internal leadworkbench modules, executable names, data paths and HTTP field shapes remain compatible.",
+  "api": {
+    "response": "{ok:true,data:any}; errors {ok:false,error:{code,message,details?}}; JSON body max4MB; API same-origin protected mutation with X-App-Token from /api/bootstrap. bind127.0.0.1 only.",
+    "routes": [
+      "GET /api/bootstrap -> {app_version,app_name,token,settings,capabilities}; capabilities.platforms supplies actual read/search capability and experimental flags; capabilities.max_batch_candidates=50 is the released shared total cap, separate from per-platform read limits.",
+      "GET /api/runs?scope=active|trash|all -> {items:[Run]}; default active excludes trash; trash/all returns public task metadata, not checkpoint records.",
+      "POST /api/runs body {name,source:'demo'|'import'|'urls'|'opencli'|'comments',goal,queries:[],platforms:[],urls:[],records:[],limit:20,targeting?:Targeting,analysis_mode?:'collect_only'|'local',collection?:Collection} -> Run (created, not automatically started)",
+      "GET /api/runs/{id} -> Run plus events",
+      "POST /api/runs/trash|restore|purge body {run_ids:[1..100 distinct IDs],operation_id} -> RunLifecycleReceipt. Atomic batch. Running/pause_requested/still-scheduled tasks reject with RUN_RUNNING/RUN_BUSY; purge requires trash. Trash operations and engine control share lifecycle locking.",
+      "POST /api/runs/{id}/start|pause|resume -> Run",
+      "GET /api/candidates?run_id=&q=&decision=&ai_decision=&order=&limit=100&offset=0 -> {items:[CandidateSummary],total}; ai_decision=keep|needs_info|watch|exclude|unanalysed, order=collected|ai_priority. AI filters are independent of final review filters; stable sort before pagination.",
+      "GET /api/candidates/{id} -> CandidateDetail",
+      "POST /api/reviews body {run_id,reviewer:'human'|'codex'|'dsh',operation_id,changes:[{candidate_id,base_version,decision:'keep'|'exclude'|'needs_info'|'watch',reason,evidence_ids:[],tags:[]}]} -> Changeset; atomic optimistic versions, idempotency; source evidence unchanged",
+      "GET /api/reviews?run_id= -> {items:[Changeset]}",
+      "POST /api/reviews/{id}/revert body {operation_id} -> reverted Changeset; conflict if any candidate changed since review",
+      "GET /api/runs/{id}/export?format=json|csv -> file export (JSON includes immutable snapshot and proposed review schema)",
+      "GET /api/settings -> masked settings",
+      "PUT /api/settings body model/OpenCLI config -> masked settings",
+      "POST /api/model/test body optional model settings -> {reachable,models,model,health,latency_ms,error?}",
+      "POST /api/import/validate body {records:[]} -> normalized records and warnings",
+      "GET /api/health -> readiness/version, no model call",
+      "POST /api/search/preview body {targeting,queries:[],platforms:[]} -> {targeting,queries,summary,platforms,manual_links,warnings}; deterministic no platform or model call"
+    ]
+  },
+  "types": {
+    "Run": {
+      "id": "run_xxx",
+      "name": "str",
+      "status": "created|running|pause_requested|paused|completed|completed_partial|failed|interrupted",
+      "source": "demo|import|urls|opencli|comments",
+      "goal": "str",
+      "config": {
+        "queries": [],
+        "platforms": [],
+        "urls": [],
+        "records": [],
+        "limit": 20,
+        "targeting": "Targeting; missing in old runs means global/business",
+        "analysis_mode": "collect_only|local; saved at creation from explicit value or model.enabled default; old runs lacking mode honor current default",
+        "collection": "Collection; source comments forces scope comments; urls accepts posts only"
+      },
+      "is_demo": false,
+      "created_at": "ISO",
+      "updated_at": "ISO",
+      "completed_at": null,
+      "counts": {
+        "total": 0,
+        "keep": 0,
+        "exclude": 0,
+        "needs_info": 0,
+        "watch": 0,
+        "unreviewed": 0
+      },
+      "progress": {
+        "current": 0,
+        "total": 0,
+        "message": "str",
+        "collection_summary": "Optional comment receipt with posts_supplied/attempted/succeeded, comments_read/matched/returned, post_results and partial/error details. Bounded sample, never global index."
+      },
+      "error": null,
+      "events": [],
+      "batch_summary": {
+        "requested_limit": "saved config.limit; original pre-clamp payload cannot be recovered for old runs",
+        "effective_limit": "min(saved request,current preference,50); current effective cap, not promise of actual results",
+        "collected": "checkpoint.records length, or stored candidate count for legacy runs",
+        "collected_basis": "checkpoint|stored_candidates",
+        "processed": "actual saved candidate rows",
+        "ai_analyzed": "completed inference results; synthetic-demo processing and missing provenance excluded",
+        "synthetic": "analysis_status synthetic_demo count",
+        "not_requested": "analysis_status not_requested count",
+        "unanalysed": "saved candidates without completed inference provenance",
+        "ai_suggestions": {
+          "keep": 0,
+          "needs_info": 0,
+          "watch": 0,
+          "exclude": 0
+        },
+        "phase": "created|collecting|analyzing|saving|completed|pause_requested|paused|failed|interrupted",
+        "collection_complete": "boolean from checkpoint, or null for legacy records",
+        "is_partial": "source/analysis partial status"
+      },
+      "deleted_at": "optional ISO timestamp; present only in recycle bin. Original execution status, evidence, checkpoints and reviews remain until explicit purge."
+    },
+    "CandidateSummary": {
+      "id": "c_xxx",
+      "run_id": "run_xxx",
+      "version": 1,
+      "brand_name": "str|null",
+      "company_website": "str|null",
+      "platform": "str",
+      "source_url": "https://...",
+      "posted_at": null,
+      "country": null,
+      "product": null,
+      "quantity": null,
+      "destination": null,
+      "deadline": null,
+      "author_handle": null,
+      "role": "buyer|seller|consumer|discussion|unknown",
+      "priority": "A|B|C|unknown",
+      "evidence_status": "complete|partial|unverified|demo",
+      "local_decision": "keep|exclude|needs_info|watch|null; null when analysis_status=not_requested",
+      "local_reason": "str",
+      "codex_decision": null,
+      "human_decision": null,
+      "effective_decision": "unreviewed|keep|exclude|needs_info|watch",
+      "review_reason": null,
+      "is_demo": false,
+      "tags": [],
+      "target_match": "object|null",
+      "budget": "string|null",
+      "property_type": "string|null",
+      "area": "string|null",
+      "renovation_stage": "string|null",
+      "start_date": "string|null",
+      "kind": "post|website|comment|import",
+      "content_excerpt": "first300 original characters",
+      "parent_source_url": "real parent post URL|null",
+      "comment_id": "native ID|null; fingerprint dedup if missing",
+      "analysis_status": "not_requested|synthetic_demo|completed|other local status",
+      "analysis_mode": "collect_only|local|demo",
+      "ai_decision": "keep|needs_info|watch|exclude|null; read-only completed AI suggestion, independent of effective_decision. Never a human review."
+    },
+    "CandidateDetail": "Summary + {evidence:[{id,kind:'post'|'website'|'comment'|'import',source_url,content,quote,posted_at,retrieved_at,content_sha256,is_demo}],analysis:{role,priority,decision,reason,facts:{},unknown_fields:[],citations:[],model,protocol,prompt_version,analysis_status},reviews:[]}; targeted analyses also contain {targeting,target_match:{status,reason,matched_tags,missing_fields,matched_region,region_evidence,custom_evidence},input_window:{original_chars,analyzed_chars,truncated},validation_retries?}; targeted facts also support budget,property_type,area,renovation_stage,start_date; each requires a verbatim value+source quote, budget/area cannot be quantity. collect_only analysis has not_requested, decision/model/protocol/prompt_version=null and no inferred facts; evidence metadata preserves commenter identity and parent context separately.",
+    "Changeset": {
+      "id": "rv_xxx",
+      "run_id": "run_xxx",
+      "reviewer": "human|codex|dsh",
+      "operation_id": "uuid",
+      "status": "applied|reverted",
+      "changes": [],
+      "created_at": "ISO",
+      "reverted_at": null
+    },
+    "Targeting": {
+      "market": "cn|global",
+      "industry": "string",
+      "customer_type": "consumer|business|any",
+      "regions": [
+        "string"
+      ],
+      "include_tags": [
+        "string"
+      ],
+      "exclude_tags": [
+        "string"
+      ],
+      "needs": "string",
+      "custom_fields": {
+        "condition_name": "string"
+      }
+    },
+    "Collection": {
+      "scope": "posts|comments|posts_and_comments; combined requires run.limit>=2",
+      "keywords": "array of up to20 strings; empty means all read comments",
+      "match_mode": "any|all; literal case-insensitive substring match within comment text",
+      "max_posts": "1..20; default3",
+      "max_comments_per_post": "1..100; default20; native adapter caps may be lower",
+      "include_replies": "boolean defaultfalse; bounded native replies where supported"
+    },
+    "RunLifecycleReceipt": {
+      "action": "trash|restore|purge",
+      "run_ids": [
+        "canonical sorted task IDs"
+      ],
+      "operation_id": "stable unique ID",
+      "changed_count": "number of affected tasks; entire batch or none"
+    }
+  },
+  "python_interfaces": {
+    "leadworkbench/engine.py": "class RunEngine(store). start(run_id)->None; pause(run_id)->None; resume(run_id)->None; shutdown()->None. Worker thread(s) serial model requests default1. Uses Store helpers below. manage_runs shares Store.lifecycle_lock and the actual scheduled-run set; no lifecycle mutation while a worker or final log owns a task.",
+    "leadworkbench/models.py": "test_connection(settings)->dict; plan_queries(settings,goal,queries,platforms)->list[str]; analyze_evidence(settings,record)->dict (strict JSON, evidence citation validation; unknown facts never promoted). Standard library urllib no proxy for localhost.",
+    "leadworkbench/collectors.py": "normalize_records(records)->(records,warnings); collect_urls(urls,limit)-> records generator; collect_opencli(queries,platforms,limit,config)-> records generator. Canonical record {source_url,platform,brand_name?,author_handle?,content,posted_at?,company_website?,country?,is_partial?,metadata?}. No writes/DMs/cookies. platform_catalog()->9 platform capabilities; domestic6 installed adapters + fixed read-only experimentalKuaishouDOM; retainpartial and own-tabcleanup; collect_comments(post_urls,platforms,limit,config,options) -> generator returning collection_summary; record_identity(record) preserves independent comments under one parent URL",
+    "leadworkbench/demo.py": "synthetic_records()->list records; synthetic_analysis(record)->dict; all .invalid URLs, is_demo=True; visibly labeled, no fake real leads.",
+    "leadworkbench/store.py": "Store(data_dir). get_settings(include_secret=False), update_settings(patch), get_run(id), update_run(id,**fields), log_event(run_id,level,message,details=None), list_candidates(run_id,...), add_candidate(run_id,record,analysis)->dict, freeze_run(run_id), export_run(run_id)->dict. add_candidate validates immutable content evidence, dedup record_identity in run (comment IDs/fingerprints plus parent, not parent URL alone), no clearing old human review on resume. get_run adds read-only batch_summary; list_candidates(run_id,q,decision,limit,offset,ai_decision=\"\",order=\"\") supports independent AI filters and stable priority order. list_runs(scope=\"active\"); get_run(id,include_deleted=False); manage_runs(action,run_ids,operation_id) atomic lifecycle. Default data reads and review retries reject deleted tasks before returning cached business results.",
+    "leadworkbench/cli.py": "HTTP client via server.json in --data-dir, commands serve/runs/show/candidates/evidence/review-export/review-apply/review-revert/demo/model-test/mcp. JSON stdout errors stderr, no direct SQLite writes.",
+    "leadworkbench/mcp.py": "stdlib JSON-RPC MCP stdio exposing runs_list,candidates_list,evidence_get,reviews_submit,reviews_revert,runs_start/runs_pause. HTTP app client only, notifications correct, protocol latest accepted 2025-03-26/2024-11-05; no initialize fake capabilities.",
+    "leadworkbench/targeting.py": "normalize_targeting, active_targeting, build_queries, search_preview; source-based region guard, bounded conditions and explicit query coverage warnings",
+    "leadworkbench/comments.py": "Read-only bounded adapters for weibo comments(+post ID resolution), xiaohongshu comments (signed note URL), bilibili comments (video BV), zhihu answer-comments (answer URL); no singular write comment commands; keyword filtering after bounded read.",
+    "leadworkbench/processing.py": "normalize_analysis_mode; normalize_collection; collected_analysis: raw evidence only, no model calls or local judgment.",
+    "leadworkbench/native_tasks.py": "TaskManagerDialog(client,parent=None,initial_tab=\"active\") with task/trash tabs, search/status filters, multi-selection, asynchronous lifecycle mutations and changed(object) receipt. No direct storage access."
+  },
+  "defaults": {
+    "model": {
+      "protocol": "openai",
+      "base_url": "http://127.0.0.1:8080/v1",
+      "model": "local-model",
+      "api_key": "",
+      "timeout_seconds": 180,
+      "max_tokens": 2048,
+      "temperature": 0.1,
+      "concurrency": 1,
+      "enabled": false,
+      "enabled_semantics": "new-run default only; app connects to user-started service, never starts/stops controller; no cloud fallback",
+      "extra_body": {}
+    },
+    "opencli": {
+      "executable": "opencli",
+      "profile": "",
+      "timeout_seconds": 90
+    },
+    "limits": {
+      "max_candidates": 50,
+      "max_content_chars": 18000
+    }
+  },
+  "platforms": {
+    "cn": [
+      "douyin",
+      "weibo",
+      "xiaohongshu",
+      "bilibili",
+      "zhihu",
+      "tieba",
+      "kuaishou"
+    ],
+    "global": [
+      "tiktok",
+      "instagram"
+    ],
+    "experimental": [
+      "kuaishou"
+    ],
+    "runtime_requires": "OpenCLI Browser Bridge connection and relevant platform login. Code/fixture support is not live collection proof.",
+    "comments": [
+      "weibo",
+      "xiaohongshu",
+      "bilibili",
+      "zhihu"
+    ],
+    "comment_limits": "Selected/discovered parent samples; Zhihu answers only, Bilibili videos only; Xiaohongshu needs full xsec_token URL; no global comment index. Other platforms search posts but comments unsupported."
+  },
+  "collection_lifecycle": {
+    "mode": "one finite batch, not continuous monitoring",
+    "default_source_budget": 20,
+    "hard_total_source_budget": 50,
+    "stop_collecting_when": [
+      "source budget reached",
+      "finite source iterator exhausted",
+      "source error or requested pause handled at step boundary"
+    ],
+    "after_collection": "optional serial local inference, then completed/partial/failed state",
+    "repeat": "no automatic or scheduled repetition",
+    "pause": "waits for in-flight network/model step before checkpoint pause",
+    "whole_batch_deadline": null
+  }
+}

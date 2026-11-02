@@ -1,0 +1,10 @@
+{
+  "package": "certifi",
+  "version": "2026.5.20",
+  "source": "https://github.com/certifi/python-certifi",
+  "release": "https://pypi.org/project/certifi/2026.5.20/",
+  "copied_from": "installed official-package distribution; CA content unchanged",
+  "sha256": "7cef540c6af3bf0a3c7d0070bd3fd7aae34f8aa805b408d1c27a01c8aeb305df",
+  "usage": "Additional Mozilla CA roots. Certificate and hostname verification stay enabled. No OS trust-store changes.",
+  "download_verification": "PyPI metadata download timed out; no claim of independently verified wheel digest."
+}

@@ -1,0 +1,3 @@
+# Native desktop GUI; backend HTTP/CLI/MCP remains standard-library based.
+# Windows distributions bundle this dependency; no QtWebEngine or WebView shell.
+PySide6-Essentials==6.12.0

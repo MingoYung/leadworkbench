@@ -1,0 +1,21 @@
+获客平台 / LeadWorkbench 0.5.3
+
+源码仓库：Python 3.12 + requirements-desktop.txt。
+在仓库目录创建虚拟环境并安装依赖，然后执行：
+python -m leadworkbench.launcher
+
+源码仓库不包含 EXE、模型文件、账号、运行数据库或浏览器登录。
+完整 Windows 桌面构建需运行 build.ps1 -DesktopLauncher，并保留
+dist/LeadWorkbench 和 dist/LeadWorkbenchDesktop 两个完整分发目录。
+
+首次默认只采集，不需要模型在线；合成演示和原文导入可先验证工作流。
+要使用 AI，先自行启动本地服务，在设置中填写实际地址、协议和模型 ID。
+local-model 是通用占位名，不代表本机已经有该模型。程序不启停模型控制器。
+
+每个任务只跑一批：默认20条、当前总上限50条，所有平台和关键词共享。
+达到上限或来源用尽后结束采集，再完成可选AI初筛，不自动重复抓取。
+任务管理 / 回收站支持多选整理、恢复及明确确认后的永久清理。
+
+社交平台读取还需配置 OpenCLI、Browser Bridge 和平台会话。
+适配命令与fixture通过不代表真实账号采集已经验收。
+详细启动、接口、验证范围、限制及第三方许可见 README.md 和 docs/。

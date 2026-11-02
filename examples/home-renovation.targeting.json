@@ -1,0 +1,10 @@
+{
+  "market": "cn",
+  "industry": "家装",
+  "customer_type": "consumer",
+  "regions": [],
+  "include_tags": ["准备装修", "旧房改造", "找施工队"],
+  "exclude_tags": ["同行广告", "招商", "招聘"],
+  "needs": "寻找有明确装修计划、正在询价或求推荐施工团队的业主。",
+  "custom_fields": {}
+}
