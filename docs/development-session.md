@@ -3,10 +3,10 @@
 This file links the initial public source delivery to the originating Codex session.
 It records a technical reference only; the private conversation is not published.
 
-- Project: 获客平台 / `leadworkbench`, version 0.5.3.
-- Repository: [MingoYung/leadworkbench](https://github.com/MingoYung/leadworkbench).
+- Project: LeadFlow / 获客平台, version 0.5.3.
+- Repository: [MingoYung/leadflow](https://github.com/MingoYung/leadflow).
 - Codex session ID: `01a1934d-a3f8-73d1-8f35-0614790b5baa`.
-- Source baseline: [`e63233f`](https://github.com/MingoYung/leadworkbench/commit/e63233fddb12fa7753e2e44ebb5e1e894ee01603).
+- Source baseline: [`e63233f`](https://github.com/MingoYung/leadflow/commit/e63233fddb12fa7753e2e44ebb5e1e894ee01603).
 - Review branch: `codex/open-source-ci-session`.
 - Association marker: `Codex-Thread-ID: 01a1934d-a3f8-73d1-8f35-0614790b5baa`.
 
