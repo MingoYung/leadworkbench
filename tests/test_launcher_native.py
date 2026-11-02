@@ -44,7 +44,8 @@ class NativeLaunchTests(unittest.TestCase):
             desktop.parent.mkdir(); desktop.touch()
             with patch.object(sys, 'frozen', True, create=True), patch.object(sys, 'executable', str(console)), patch.object(launcher.subprocess, 'Popen') as process, patch.object(launcher, 'ensure_service') as service:
                 result = launcher.launch_desktop(directory / 'data')
-            self.assertEqual(str(desktop), process.call_args.args[0][0])
+            # Windows TEMP may use an 8.3 alias while the launcher resolves it.
+            self.assertTrue(desktop.samefile(process.call_args.args[0][0]))
             service.assert_not_called()
             self.assertFalse(result['browser_open_requested'])
 
