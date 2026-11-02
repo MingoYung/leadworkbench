@@ -143,6 +143,8 @@ python -m unittest discover -s tests -v
 
 实现和集成契约见 [API_CONTRACT.json](API_CONTRACT.json)，模块与数据流程见 [架构说明](docs/architecture.md)。
 
+参与开发请先阅读 [贡献指南](CONTRIBUTING.md)；安全问题按 [SECURITY.md](SECURITY.md) 报告。首次开源交付的技术记录与会话编号见 [会话关联记录](docs/development-session.md)。
+
 ## 许可证与本地资料
 
 本项目自行编写的代码采用 [MIT License](LICENSE)。Qt/PySide6、OpenCLI 及其他上游代码和资源遵循各自许可证，见 [NOTICE.md](NOTICE.md) 与 [licenses/](licenses/)。
